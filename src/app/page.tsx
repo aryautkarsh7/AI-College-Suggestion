@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
 import { AIChatBox } from "@/components/ai-chat-box";
@@ -10,11 +11,21 @@ import { ExploreSection } from "@/components/explore-section";
 import { DestinationCards } from "@/components/destination-cards";
 import { TrustSection } from "@/components/trust-section";
 import { Footer } from "@/components/footer";
+import { GradientGlow } from "@/components/gradient-glow";
 import { useChat } from "@/hooks/use-chat";
 
 export default function HomePage() {
-  const { messages, isTyping, isChatMode, sendMessage, selectOption, resetChat } =
-    useChat();
+  const {
+    messages,
+    isTyping,
+    isChatMode,
+    sendMessage,
+    selectOption,
+    selectDegree,
+    selectExams,
+    submitPercentage,
+    resetChat,
+  } = useChat();
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -47,21 +58,21 @@ export default function HomePage() {
         <Navbar onLogoClick={resetChat} />
 
         {/* Chat messages area */}
-        <div
-          ref={chatContainerRef}
-          className="flex-1 overflow-y-auto"
-        >
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-6 px-4 py-6 pb-4">
             {messages.map((msg, index) => (
               <ChatMessage
                 key={msg.id}
                 message={msg}
                 onSelectOption={selectOption}
+                onSelectDegree={selectDegree}
+                onSelectExams={selectExams}
+                onSubmitPercentage={submitPercentage}
                 isLatest={index === messages.length - 1}
               />
             ))}
 
-            {isTyping && <TypingIndicator />}
+            <AnimatePresence>{isTyping && <TypingIndicator />}</AnimatePresence>
 
             <div ref={messagesEndRef} />
           </div>
@@ -91,19 +102,22 @@ export default function HomePage() {
 
       {/* Main hero area */}
       <main className="flex flex-1 flex-col">
-        {/* Hero + Search centered */}
-        <div className="flex flex-1 flex-col items-center justify-center px-4 py-12 sm:py-20">
-          <div className="flex w-full max-w-3xl flex-col items-center gap-8">
+        {/* Hero + Search centered, with the animated gradient glow behind it */}
+        <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-4 py-12 sm:py-20">
+          <GradientGlow />
+
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex w-full max-w-3xl flex-col items-center gap-8"
+          >
             <Hero />
 
-            <AIChatBox
-              onSubmit={handleSubmit}
-              value={inputValue}
-              onChange={setInputValue}
-            />
+            <AIChatBox onSubmit={handleSubmit} value={inputValue} onChange={setInputValue} />
 
             <SuggestionChips onChipClick={handleChipClick} />
-          </div>
+          </motion.div>
         </div>
 
         {/* Below-fold sections */}

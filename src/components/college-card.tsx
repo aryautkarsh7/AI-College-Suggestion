@@ -1,8 +1,9 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { University } from "@/lib/types";
-import { MapPin, GraduationCap, Building2, Bookmark, ArrowRight, Scale } from "lucide-react";
+import { MapPin, GraduationCap, Building2, Bookmark, ArrowRight, Scale, FileCheck2 } from "lucide-react";
 
 interface CollegeCardProps {
   university: University;
@@ -31,22 +32,26 @@ export function CollegeCard({ university, index = 0 }: CollegeCardProps) {
   const matchStyle = matchColors[university.matchLevel] || matchColors["Explore further"];
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        delay: index * 0.06,
+        duration: 0.4,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      whileHover={{ y: -4, transition: { duration: 0.2 } }}
       className={cn(
-        "animate-fade-in-up group rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm",
-        "transition-all duration-200 ease-out",
-        "hover:border-[#4F46E5]/20 hover:shadow-md hover:-translate-y-0.5",
-        `stagger-${index + 1}`
+        "group rounded-2xl border border-[#E5E7EB] bg-white p-5 shadow-sm",
+        "transition-shadow duration-200 hover:border-[#4F46E5]/20 hover:shadow-lg hover:shadow-[#4F46E5]/5"
       )}
-      style={{ opacity: 0, animationFillMode: "forwards" }}
     >
       {/* Header */}
       <div className="mb-3">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="font-semibold text-[#111111] leading-snug">
-              {university.name}
-            </h3>
+            <h3 className="leading-snug font-semibold text-[#111111]">{university.name}</h3>
             <div className="mt-1 flex items-center gap-1.5 text-sm text-[#6B7280]">
               <MapPin size={14} className="shrink-0" />
               <span>
@@ -65,13 +70,21 @@ export function CollegeCard({ university, index = 0 }: CollegeCardProps) {
         </div>
         <div className="inline-flex items-center gap-1 rounded-lg bg-[#F5F5F5] px-2.5 py-1 text-xs text-[#6B7280]">
           <Building2 size={12} />
-          <span>{university.type} University</span>
+          <span>{university.type}</span>
         </div>
       </div>
 
+      {/* Accepted exams (India track) */}
+      {university.examsAccepted && university.examsAccepted.length > 0 && (
+        <div className="mb-3 flex items-start gap-1.5 text-xs text-[#6B7280]">
+          <FileCheck2 size={13} className="mt-0.5 shrink-0" />
+          <span>Accepts: {university.examsAccepted.join(", ").toUpperCase()}</span>
+        </div>
+      )}
+
       {/* Tuition */}
       <p className="mb-3 text-sm text-[#6B7280]">
-        Tuition: <span className="font-medium text-[#111111]">{university.tuitionRange}</span>
+        Fees: <span className="font-medium text-[#111111]">{university.tuitionRange}</span>
       </p>
 
       {/* Match tag */}
@@ -97,7 +110,7 @@ export function CollegeCard({ university, index = 0 }: CollegeCardProps) {
             "transition-all duration-200 hover:bg-[#4338CA] active:scale-[0.98]"
           )}
         >
-          View University
+          View details
           <ArrowRight size={14} />
         </button>
         <button
@@ -120,6 +133,6 @@ export function CollegeCard({ university, index = 0 }: CollegeCardProps) {
           <Bookmark size={14} />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

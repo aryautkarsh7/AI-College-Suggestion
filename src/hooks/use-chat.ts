@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import { ChatMessage, ConversationContext, ConversationStage } from "@/lib/types";
-import { processMessage } from "@/lib/mock-ai";
+import { useCallback, useRef, useState } from "react";
+import {
+  ChatMessage,
+  ChatTurnPayload,
+  ConversationContext,
+  ConversationStage,
+  SubjectScore,
+} from "@/lib/types";
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
@@ -16,57 +21,102 @@ export function useChat() {
     stage: "initial" as ConversationStage,
   });
 
-  const sendMessage = useCallback(
-    (text: string) => {
-      // Add user message
-      const userMessage: ChatMessage = {
-        id: generateId(),
-        role: "user",
-        content: text,
-        timestamp: new Date(),
-      };
+  const appendUserMessage = useCallback((content: string) => {
+    const userMessage: ChatMessage = {
+      id: generateId(),
+      role: "user",
+      content,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsChatMode(true);
+  }, []);
 
-      setMessages((prev) => [...prev, userMessage]);
+  const advance = useCallback(async (message: string, payload?: ChatTurnPayload) => {
+    setIsTyping(true);
 
-      if (!isChatMode) {
-        setIsChatMode(true);
-      }
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, context: contextRef.current, payload }),
+      });
 
-      // Show typing indicator
-      setIsTyping(true);
+      if (!res.ok) throw new Error(`Chat request failed with status ${res.status}`);
 
-      // Process with mock AI
-      const { response, updatedContext } = processMessage(
-        text,
-        contextRef.current
-      );
+      const { response, updatedContext } = await res.json();
       contextRef.current = updatedContext;
 
-      // Simulate AI thinking delay
-      const delay = response.delay || 1000;
-      setTimeout(() => {
-        setIsTyping(false);
+      const delay = response.delay ?? 800;
+      await new Promise((resolve) => setTimeout(resolve, delay));
 
-        const aiMessage: ChatMessage = {
-          id: generateId(),
-          role: "ai",
-          content: response.text,
-          timestamp: new Date(),
-          followUpOptions: response.followUpOptions,
-          recommendations: response.recommendations,
-        };
+      setIsTyping(false);
+      const aiMessage: ChatMessage = {
+        id: generateId(),
+        role: "ai",
+        content: response.text,
+        timestamp: new Date(),
+        followUpOptions: response.followUpOptions,
+        recommendations: response.recommendations,
+        widget: response.widget,
+        degreeOptions: response.degreeOptions,
+        examOptions: response.examOptions,
+        percentageSubjects: response.percentageSubjects,
+        resultsNote: response.resultsNote,
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch {
+      setIsTyping(false);
+      const errorMessage: ChatMessage = {
+        id: generateId(),
+        role: "ai",
+        content: "Sorry, I couldn't reach CollegeAI just now. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+  }, []);
 
-        setMessages((prev) => [...prev, aiMessage]);
-      }, delay);
+  const sendMessage = useCallback(
+    (text: string) => {
+      appendUserMessage(text);
+      advance(text);
     },
-    [isChatMode]
+    [appendUserMessage, advance]
   );
 
   const selectOption = useCallback(
     (value: string, label: string) => {
-      sendMessage(value);
+      appendUserMessage(label);
+      advance(value);
     },
-    [sendMessage]
+    [appendUserMessage, advance]
+  );
+
+  const selectDegree = useCallback(
+    (degreeId: string, label: string) => {
+      appendUserMessage(label);
+      advance(degreeId, { degreeId });
+    },
+    [appendUserMessage, advance]
+  );
+
+  const selectExams = useCallback(
+    (examIds: string[], examLabels: string[], noExam: boolean) => {
+      const label = noExam ? "I haven't cleared any exam yet" : examLabels.join(", ");
+      appendUserMessage(label);
+      advance("", { exams: examIds, noExam });
+    },
+    [appendUserMessage, advance]
+  );
+
+  const submitPercentage = useCallback(
+    (scores: SubjectScore[]) => {
+      const label = scores.map((s) => `${s.subject}: ${s.percentage}%`).join(" · ");
+      appendUserMessage(label);
+      advance("", { subjectScores: scores });
+    },
+    [appendUserMessage, advance]
   );
 
   const resetChat = useCallback(() => {
@@ -82,6 +132,9 @@ export function useChat() {
     isChatMode,
     sendMessage,
     selectOption,
+    selectDegree,
+    selectExams,
+    submitPercentage,
     resetChat,
   };
 }
