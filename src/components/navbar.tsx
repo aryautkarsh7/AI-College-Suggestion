@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface NavbarProps {
-  onLogoClick?: () => void;
-}
-
-export function Navbar({ onLogoClick }: NavbarProps) {
+export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
@@ -28,33 +25,36 @@ export function Navbar({ onLogoClick }: NavbarProps) {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <button
-          onClick={onLogoClick}
+        <Link
+          href="/"
           className="flex items-center gap-1 text-xl font-semibold tracking-tight text-[#111111] transition-opacity hover:opacity-80"
         >
           <span className="bg-gradient-to-r from-[#4F46E5] to-[#8B5CF6] bg-clip-text text-transparent">
             College
           </span>
           <span>AI</span>
-        </button>
+        </Link>
 
         {/* Desktop Nav */}
         <div className="hidden items-center gap-6 sm:flex">
-          <a
-            href="#explore"
+          <Link
+            href="/#explore"
             className="text-sm font-medium text-[#6B7280] transition-colors hover:text-[#111111]"
           >
             Explore
-          </a>
-          <a
-            href="#compare"
+          </Link>
+          <Link
+            href="/#compare"
             className="text-sm font-medium text-[#6B7280] transition-colors hover:text-[#111111]"
           >
             Compare
-          </a>
-          <button className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#111111] shadow-sm transition-all hover:border-[#4F46E5]/30 hover:shadow-md">
-            Sign in
-          </button>
+          </Link>
+          <Link
+            href="/chat"
+            className="rounded-lg bg-[#4F46E5] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#4338CA] hover:shadow-md"
+          >
+            Try AI Chat
+          </Link>
         </div>
 
         {/* Mobile menu button */}
@@ -77,21 +77,24 @@ export function Navbar({ onLogoClick }: NavbarProps) {
             className={cn("overflow-hidden border-t border-[#E5E7EB] bg-[#FAFAFA] sm:hidden")}
           >
             <div className="flex flex-col gap-3 px-4 py-4">
-              <a
-                href="#explore"
+              <Link
+                href="/#explore"
                 className="rounded-lg px-3 py-2 text-sm font-medium text-[#6B7280] hover:bg-[#F5F5F5] hover:text-[#111111]"
               >
                 Explore
-              </a>
-              <a
-                href="#compare"
+              </Link>
+              <Link
+                href="/#compare"
                 className="rounded-lg px-3 py-2 text-sm font-medium text-[#6B7280] hover:bg-[#F5F5F5] hover:text-[#111111]"
               >
                 Compare
-              </a>
-              <button className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-medium text-[#111111] shadow-sm">
-                Sign in
-              </button>
+              </Link>
+              <Link
+                href="/chat"
+                className="rounded-lg bg-[#4F46E5] px-4 py-2 text-center text-sm font-medium text-white shadow-sm"
+              >
+                Try AI Chat
+              </Link>
             </div>
           </motion.div>
         )}
